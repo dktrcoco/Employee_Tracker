@@ -1,0 +1,16 @@
+{
+    "name": "employee_tracker_assignment",
+    "version": "1.0.0",
+    "description": "Assignment 11",
+    "main": "server.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "author": "CGK",
+    "license": "ISC",
+    "dependencies": {
+        "console.table": "^0.10.0",
+        "inquirer": "^6.5.2",
+        "mysql": "^2.18.1"
+    }
+}
