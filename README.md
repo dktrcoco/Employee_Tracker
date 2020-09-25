@@ -1,6 +1,6 @@
 # Employee_Tracker
 
-This will have a CLI that takes user input, followed by displaying the requested data from a database or manipulating the data from a database
+This will have a CLI that takes user input, followed by displaying the requested data from a database, manipulating the data from a database, or inserting the inputted data to the database
 
 Table of Contents
 * [User Story](#story)
@@ -80,15 +80,20 @@ THEN the connection is terminated and I go back to the command-line prompt
 
 ## Images
 
+Fig. 1: 
+![](/Develop/NodeChoice.PNG)
+
 ## Install
 
 You need to install inquirer and mysql in order to allow prompts and interaction with the database, respectively.
 
 ## Contributions
 
+If you have any contribution ideas or thoughts, please contact me via email (chris.kabana@gmail.com)
+
 ## Testing
 
-When you are using this app, 
+When you are using this app, test it using Node in the command line (I used Git Bash)
 
 ## Questions
 
