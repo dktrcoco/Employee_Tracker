@@ -4,7 +4,6 @@ var mysql = require("mysql");
 var inquirer = require("inquirer");
 // var cTable = require("console.table"); writing console.table("tableName") will suffice
 
-//
 var connection = mysql.createConnection({
     host: "localhost",
 
@@ -35,12 +34,12 @@ function runTracker() {
         "Add Department": addDepartment, //works
         "Remove Employee": removeEmployee, //works
         "Add Role": addRole, //works
-        "Remove Role": removeRole, //not done
-        "Remove Department": removeDepartment, //not done
-        "Update Employee Role": updateEmployeeRole, //not done
-        "Update Employee Manager": updateEmployeeManager, //not done
+        "Remove Role": removeRole, //works
+        "Remove Department": removeDepartment, //works
+        "Update Employee Role": updateEmployeeRole, //works
+        "Update Employee Manager": updateEmployeeManager, //works
         "Department Overhead": salaryOfDepartment, //not done
-        "I'm Done": taskComplete //not done
+        "I'm Done": taskComplete //works
     }
 
     inquirer
@@ -48,7 +47,8 @@ function runTracker() {
             name: "options",
             type: "rawlist",
             message: "What would you like to do?",
-            choices: Object.keys(funcs)
+            choices: Object.keys(funcs),
+            pageSize: 15
         })
         .then(function (answer) {
             console.log(answer.options);
@@ -56,6 +56,7 @@ function runTracker() {
         });
 }
 
+//displays all employees along with their role (title), salary, department, and manager
 function viewAllEmployees() {
     //need to use console.table and pull the entire table from db
     //this requires additional syntax to pull from multiple tables
@@ -73,6 +74,7 @@ function viewAllEmployees() {
     runTracker();
 };
 
+//allows for the selection of a department and displays all employees that are part of that department
 function viewAllEmployeesByDepartment() {
     //need to use console.table and pull the table from db filtered by department
     var dept = 'SELECT * FROM department';
@@ -90,9 +92,11 @@ function viewAllEmployeesByDepartment() {
                     name: "deptFilter",
                     type: "list",
                     message: "Which Department's Employees do you want to see?",
-                    choices: departmentChoices
+                    choices: departmentChoices,
+                    pageSize: departmentChoices.length
                 }
             )
+
             .then(answers => {
                 var sql = 'SELECT e.first_name, e.last_name, r.title, r.salary, d.name AS "department name",' +
                     'CONCAT(em.first_name, " ", em.last_name) AS Manager ' +
@@ -111,6 +115,7 @@ function viewAllEmployeesByDepartment() {
 
 };
 
+//allows for the selection of a manager and displays all employees that report to that manager
 function viewAllEmployeesByManager() {
     //need to use console.table and pull the table from db filtered by manager
     var manager = 'SELECT * FROM employee';
@@ -128,7 +133,8 @@ function viewAllEmployeesByManager() {
                     name: "managerFilter",
                     type: "list",
                     message: "Which Manager's Employees do you want to see?",
-                    choices: managerChoices
+                    choices: managerChoices,
+                    pageSize: managerChoices.length
                 }
             )
             .then(answers => {
@@ -148,6 +154,7 @@ function viewAllEmployeesByManager() {
     })
 };
 
+//allows for the selection of a role and displays all employees with that role
 function viewAllEmployeesByRole() {
     var role = 'SELECT * FROM role';
     connection.query(role, function (err, res) {
@@ -164,7 +171,8 @@ function viewAllEmployeesByRole() {
                     name: "roleFilter",
                     type: "list",
                     message: "Which Role would you like to search?",
-                    choices: roleChoices
+                    choices: roleChoices,
+                    pageSize: roleChoices.length
                 }
             )
             .then(answers => {
@@ -184,6 +192,7 @@ function viewAllEmployeesByRole() {
     })
 };
 
+//allows for the addition of an employee to the employee table from the employeeTracker_DB
 function addEmployee() {
     var manager = 'SELECT * FROM employee';
     var role = 'SELECT * FROM role';
@@ -218,16 +227,18 @@ function addEmployee() {
                     message: "What is the Employee's last name?"
                 },
                 {
-                    name: "employeeRole",
-                    type: "list",
-                    message: "What is the Employee's role?",
-                    choices: roleChoices
-                },
-                {
                     name: "employeeManager",
                     type: "list",
                     message: "Who is the Employee's Manager?",
-                    choices: managerChoices
+                    choices: managerChoices,
+                    pageSize: managerChoices.length
+                },
+                {
+                    name: "employeeRole",
+                    type: "list",
+                    message: "What is the Employee's role?",
+                    choices: roleChoices,
+                    pageSize: roleChoices.length
                 }
                 ])
                 .then(answers => {
@@ -235,7 +246,7 @@ function addEmployee() {
                     connection.query("INSERT INTO employee (first_name, last_name, manager_id, role_id) VALUES (?, ?, ?, ?)", [answers.firstName, answers.lastName, answers.employeeManager, answers.employeeRole], function (err, res) {
                         console.log(err);
                         if (err) throw err;
-
+                        console.log("");
                     });
                 });
         });
@@ -243,6 +254,7 @@ function addEmployee() {
     });
 };
 
+//allows for the addition of a department to the department table from the employeeTracker_DB
 function addDepartment() {
 
     inquirer
@@ -264,6 +276,7 @@ function addDepartment() {
 
 };
 
+//allows for the addition of a role to the role table from the employeeTracker_DB
 function addRole() {
 
     var dept = 'SELECT * FROM department';
@@ -291,7 +304,8 @@ function addRole() {
                     name: "roleDepartment",
                     type: "list",
                     message: "which Department will this new Role work in?",
-                    choices: departmentChoices
+                    choices: departmentChoices,
+                    pageSize: departmentChoices.length
                 }
             ])
             .then(answers => {
@@ -304,44 +318,52 @@ function addRole() {
     });
 };
 
+//allows for the selection of a department and tallies the total of all department member's salary
 function salaryOfDepartment() {
     //need to isolate
-    var dept = 'SELECT * FROM department';
-    connection.query(dept, function (err, res) {
-        if (err) throw err;
-        const departmentChoices = res.map(({
-            id, name
-        }) => ({
-            name: name,
-            value: id
-        }))
-        inquirer
-            .prompt(
-                {
-                    name: "deptFilter",
-                    type: "list",
-                    message: "Which Department's Total Salary do you want to see?",
-                    choices: departmentChoices
-                }
-            )
-            .then(answers => {
-                var sql = 'SELECT e.first_name, e.last_name, r.title, r.salary, d.name AS "department name",' +
-                    'CONCAT(em.first_name, " ", em.last_name) AS Manager ' +
-                    'FROM employee e INNER JOIN role r ON e.role_id = r.id ' +
-                    'LEFT JOIN employee em ON e.manager_id = em.id ' +
-                    'INNER JOIN department d ON r.department_id = d.id ' +
-                    'WHERE d.id = ' + answers.deptFilter;
-                connection.query(sql, function (err, res) {
-                    if (err) throw err;
-                    console.log("");
-                    console.table(res);
-                    runTracker();
-                });
-            });
-    });
+    // var dept = 'SELECT * FROM department';
+    // connection.query(dept, function (err, res) {
+    //     if (err) throw err;
+    //     const departmentChoices = res.map(({
+    //         id, name
+    //     }) => ({
+    //         name: name,
+    //         value: id
+    //     }))
+    //     inquirer
+    //         .prompt(
+    //             {
+    //                 name: "deptFilter",
+    //                 type: "list",
+    //                 message: "Which Department's Total Salary do you want to see?",
+    //                 choices: departmentChoices,
+    //                 pageSize: departmentChoices.length
+    //             }
+    //         )
+    //         .then(answers => {
 
+    //             var sql = 'SELECT department.name AS department, role.salary FROM employee e LEFT JOIN ' +
+    //             'employee m ON e.manager_id = m.id INNER JOIN role ON e.role_id = role.id INNER JOIN ' + 
+    //             'department ON role.department_id = department.id ' + answers.deptFilter;
+    //             // var sql = 'SELECT e.first_name, e.last_name, r.title, r.salary, d.name AS "department name",' +
+    //             //     'CONCAT(em.first_name, " ", em.last_name) AS Manager ' +
+    //             //     'FROM employee e INNER JOIN role r ON e.role_id = r.id ' +
+    //             //     'LEFT JOIN employee em ON e.manager_id = em.id ' +
+    //             //     'INNER JOIN department d ON r.department_id = d.id ' +
+    //             //     'WHERE d.id = ' + answers.deptFilter;
+    //             connection.query(sql, function (err, res) {
+    //                 if (err) throw err;
+    //                 console.log("");
+    //                 console.table(res);
+    //             });
+    //             runTracker();
+    //         });
+    // });
+
+    runTracker(); //this is here so you go back to the main menu since the function is not currently functional
 };
 
+//allows for the removal of an employee from the employee table from the employeeTracker_DB
 function removeEmployee() {
     var employee = 'SELECT * FROM employee';
 
@@ -359,7 +381,8 @@ function removeEmployee() {
                     name: "empToRemove",
                     type: "list",
                     message: "Which Employee do you want to remove?",
-                    choices: employeeChoices
+                    choices: employeeChoices,
+                    pageSize: employeeChoices.length
                 }
             )
             .then(answers => {
@@ -373,6 +396,7 @@ function removeEmployee() {
     });
 };
 
+//allows for the removal of a department from the department table from the employeeTracker_DB
 function removeDepartment() {
     var dept = 'SELECT * FROM department';
 
@@ -390,7 +414,8 @@ function removeDepartment() {
                     name: "deptToRemove",
                     type: "list",
                     message: "Which Department do you want to remove?",
-                    choices: deptChoices
+                    choices: deptChoices,
+                    pageSize: deptChoices.length
                 }
             )
             .then(answers => {
@@ -404,9 +429,41 @@ function removeDepartment() {
     });
 };
 
+//allows for the removal of a role from the role table from the employeeTracker_DB
 function removeRole() {
-    var employee = 'SELECT * FROM employee';
+    var role = 'SELECT * FROM role';
+    connection.query(role, function (err, res) {
+        if (err) throw err;
+        const roleChoices = res.map(({
+            id, title
+        }) => ({
+            name: title,
+            value: id
+        }))
+        inquirer
+            .prompt([
+                {
+                    name: "roleToRemove",
+                    type: "list",
+                    message: "which Role would you like to remove?",
+                    choices: roleChoices,
+                    pageSize: roleChoices.length
+                }
+            ])
+            .then(answers => {
+                connection.query('DELETE FROM role WHERE id = (?)', [answers.roleToRemove], function (err, res) {
+                    if (err) throw err;
+                    console.log("");
+                });
+                runTracker();
+            });
+    });
+};
 
+//allows for selection of an employee and setting their role
+function updateEmployeeRole() {
+    var employee = 'SELECT * FROM employee';
+    var role = 'SELECT * FROM role';
     connection.query(employee, function (err, res) {
         if (err) throw err;
         const employeeChoices = res.map(({
@@ -415,56 +472,46 @@ function removeRole() {
             name: `${first_name} ${last_name}`,
             value: id
         }));
-        inquirer
-            .prompt(
-                {
-                    name: "empToRemove",
-                    type: "list",
-                    message: "Which Employee do you want to remove?",
-                    choices: employeeChoices
-                }
-            )
-            .then(answers => {
-                connection.query("DELETE FROM employee WHERE id = (?)", [answers.empToRemove], function (err, res) {
-                    console.log(err);
-                    if (err) throw err;
 
+        connection.query(role, function (err, res) {
+            if (err) throw err;
+            const roleChoices = res.map(({
+                id, title
+            }) => ({
+                name: title,
+                value: id
+            }));
+
+            inquirer
+                .prompt([
+                    {
+                        name: "empToUpdateRole",
+                        type: "list",
+                        message: "Which Employee's Role do you want to update?",
+                        choices: employeeChoices,
+                        pageSize: employeeChoices.length
+                    },
+                    {
+                        name: "setRole",
+                        type: "list",
+                        message: "Which Role do you want to set as the new Role for the selected Employee?",
+                        choices: roleChoices,
+                        pageSize: roleChoices.length
+                    }
+                ])
+                .then(answers => {
+                    //syntax for updating manager column in db for specific employee
+                    connection.query("UPDATE employee SET role_id = (?) WHERE id = (?)", [answers.setRole, answers.empToUpdateRole], function (err, result) {
+                        if (err) throw err;
+                        console.log("");
+                    });
+                    runTracker();
                 });
-                runTracker();
-            });
+        });
     });
 };
 
-function updateEmployeeRole() {
-    inquirer
-        .prompt([
-            {
-                name: "roleUpdate",
-                type: "list",
-                message: "Which Employee's Role do you want to update?"
-            },
-            {
-                name: "setRole",
-                type: "list",
-                message: "Which Role do you want to set for the selected Employee?"
-            }
-        ])
-        .then(answers => {
-            //syntax for updating role column in db for specific employee
-            connection.query("UPDATE plans SET role = ? WHERE employee = ?", [req.body.role, req.params.id], function (err, result) {
-                if (err) {
-                    // If an error occurred, send a generic server failure
-                    return res.status(500).end();
-                }
-                else if (result.changedRows === 0) {
-                    // If no rows were changed, then the ID must not exist, so 404
-                    console.log(404);
-                }
-            });
-            runTracker();
-        })
-};
-
+//allows for selection of an employee and setting their manager
 function updateEmployeeManager() {
     var manager = 'SELECT * FROM employee';
     connection.query(manager, function (err, res) {
@@ -475,32 +522,35 @@ function updateEmployeeManager() {
             name: `${first_name} ${last_name}`,
             value: id
         }))
-    inquirer
-        .prompt([
-            {
-                name: "managerUpdate",
-                type: "list",
-                message: "Which Employee's Manager do you want to update?",
-                choices: managerChoices
-            },
-            {
-                name: "setManager",
-                type: "list",
-                message: "Which Employee do you want to set as Manager for the selected Employee?",
-                choices: managerChoices
-            }
-        ])
-        .then(answers => {
-            //syntax for updating manager column in db for specific employee
-            connection.query("UPDATE employee SET manager_id = (?) WHERE id = (?)", [answers.setManager, answers.managerUpdate], function (err, result) {
-                if (err) throw err;
-                console.log("");
+        inquirer
+            .prompt([
+                {
+                    name: "managerUpdate",
+                    type: "list",
+                    message: "Which Employee's Manager do you want to update?",
+                    choices: managerChoices,
+                    pageSize: managerChoices.length
+                },
+                {
+                    name: "setManager",
+                    type: "list",
+                    message: "Which Employee do you want to set as Manager for the selected Employee?",
+                    choices: managerChoices,
+                    pageSize: managerChoices.length
+                }
+            ])
+            .then(answers => {
+                //syntax for updating manager column in db for specific employee
+                connection.query("UPDATE employee SET manager_id = (?) WHERE id = (?)", [answers.setManager, answers.managerUpdate], function (err, result) {
+                    if (err) throw err;
+                    console.log("");
+                });
+                runTracker();
             });
-            runTracker();
-        });
     });
 };
 
+//terminates connection in node
 function taskComplete() {
     connection.end();
 };
