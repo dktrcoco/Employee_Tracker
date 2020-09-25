@@ -27,19 +27,19 @@ function runTracker() {
     //associative array, indexing it based on the selection from user
     //and mapping it to the associated function
     const funcs = {
-        "View All Employees": viewAllEmployees,
-        "View All Employees by Department": viewAllEmployeesByDepartment,
-        "View All Employees by Manager": viewAllEmployeesByManager,
-        "View All Employees by Role": viewAllEmployeesByRole,
-        "Add Employee": addEmployee,
-        "Add Department": addDepartment,
-        "Remove Employee": removeEmployee,
-        "Add Role": addRole,
-        "Remove Role": removeRole,
-        "Remove Department": removeDepartment,
-        "Update Employee Role": updateEmployeeRole,
-        "Update Employee Manager": updateEmployeeManager,
-        "Department Overhead": salaryOfDepartment
+        "View All Employees": viewAllEmployees, //works
+        "View All Employees by Department": viewAllEmployeesByDepartment, //works
+        "View All Employees by Manager": viewAllEmployeesByManager, //works
+        "View All Employees by Role": viewAllEmployeesByRole, //works
+        "Add Employee": addEmployee, //works
+        "Add Department": addDepartment, //works
+        "Remove Employee": removeEmployee, //works
+        "Add Role": addRole, //works
+        "Remove Role": removeRole, //not done
+        "Remove Department": removeDepartment, //not done
+        "Update Employee Role": updateEmployeeRole, //not done
+        "Update Employee Manager": updateEmployeeManager, //not done
+        "Department Overhead": salaryOfDepartment //not done
     }
 
     inquirer
@@ -109,52 +109,6 @@ function viewAllEmployeesByDepartment() {
     });
 
 };
-
-function listAllEmployees() {
-    var employeeQuery = 'SELECT * FROM employee';
-    var employees;
-    connection.query(employeeQuery, function (err, res) {
-        if (err) throw err;
-        employees = res.map(({
-            id, first_name, last_name
-        }) => ({
-            name: `${first_name} ${last_name}`,
-            value: id
-        }))
-        console.log(employees);
-    });
-    console.log(employees);
-    return employees;
-}
-
-// function listAllEmployees() {
-//     var employeeQuery = 'SELECT * FROM employee';
-//     connection.query(employeeQuery, function (err, res) {
-//         if (err) throw err;
-//         const employees = res.map(({
-//             id, first_name, last_name
-//         }) => ({
-//             name: `${first_name} ${last_name}`,
-//             value: id
-//         }))
-//     }
-// return employees;
-// }
-
-
-
-// function listAllRoles() {
-//     var roleQuery = 'SELECT * FROM role';
-//     connection.query(roleQuery, function (err, res) {
-//         if (err) throw err;
-//         const roleChoices = res.map(({
-//             id, title
-//         }) => ({
-//             name: title,
-//             value: id
-//         }))
-//         return roleChoices;
-//     };
 
 function viewAllEmployeesByManager() {
     //need to use console.table and pull the table from db filtered by manager
@@ -302,14 +256,51 @@ function addDepartment() {
             connection.query('INSERT INTO department (name) VALUES (?)', [answers.deptToAdd], function (err, res) {
                 if (err) throw err;
                 console.log("");
-                runTracker();
+
             });
+            runTracker();
         });
 
 };
 
 function addRole() {
 
+    var dept = 'SELECT * FROM department';
+    connection.query(dept, function (err, res) {
+        if (err) throw err;
+        const departmentChoices = res.map(({
+            id, name
+        }) => ({
+            name: name,
+            value: id
+        }))
+        inquirer
+            .prompt([
+                {
+                    name: "roleToAdd",
+                    type: "input",
+                    message: "What is the name of the Role you want to add?"
+                },
+                {
+                    name: "roleSalary",
+                    type: "input",
+                    message: "What is the salary for the new Role?"
+                },
+                {
+                    name: "roleDepartment",
+                    type: "list",
+                    message: "which Department will this new Role work in?",
+                    choices: departmentChoices
+                }
+            ])
+            .then(answers => {
+                connection.query('INSERT INTO role (title, salary, department_id) VALUES(?, ?, ?)', [answers.roleToAdd, answers.roleSalary, answers.roleDepartment], function (err, res) {
+                    if (err) throw err;
+                    console.log("");
+                });
+                runTracker();
+            });
+    });
 };
 
 function salaryOfDepartment() {
@@ -502,3 +493,50 @@ function updateEmployeeManager() {
             runTracker();
         })
 };
+
+//functions I was testing
+// function listAllEmployees() {
+//     var employeeQuery = 'SELECT * FROM employee';
+//     var employees;
+//     connection.query(employeeQuery, function (err, res) {
+//         if (err) throw err;
+//         employees = res.map(({
+//             id, first_name, last_name
+//         }) => ({
+//             name: `${first_name} ${last_name}`,
+//             value: id
+//         }))
+//         console.log(employees);
+//     });
+//     console.log(employees);
+//     return employees;
+// }
+
+// function listAllEmployees() {
+//     var employeeQuery = 'SELECT * FROM employee';
+//     connection.query(employeeQuery, function (err, res) {
+//         if (err) throw err;
+//         const employees = res.map(({
+//             id, first_name, last_name
+//         }) => ({
+//             name: `${first_name} ${last_name}`,
+//             value: id
+//         }))
+//     }
+// return employees;
+// }
+
+
+
+// function listAllRoles() {
+//     var roleQuery = 'SELECT * FROM role';
+//     connection.query(roleQuery, function (err, res) {
+//         if (err) throw err;
+//         const roleChoices = res.map(({
+//             id, title
+//         }) => ({
+//             name: title,
+//             value: id
+//         }))
+//         return roleChoices;
+//     };
