@@ -42,7 +42,6 @@ function runTracker() {
         "Department Overhead": salaryOfDepartment
     }
 
-    // console.log(Object.keys(funcs));
     inquirer
         .prompt({
             name: "options",
