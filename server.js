@@ -39,7 +39,8 @@ function runTracker() {
         "Remove Department": removeDepartment, //not done
         "Update Employee Role": updateEmployeeRole, //not done
         "Update Employee Manager": updateEmployeeManager, //not done
-        "Department Overhead": salaryOfDepartment //not done
+        "Department Overhead": salaryOfDepartment, //not done
+        "I'm Done": taskComplete //not done
     }
 
     inquirer
@@ -492,6 +493,10 @@ function updateEmployeeManager() {
             });
             runTracker();
         })
+};
+
+function taskComplete() {
+    connection.end();
 };
 
 //functions I was testing
