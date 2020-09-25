@@ -290,21 +290,21 @@ function addEmployee() {
 
 function addDepartment() {
 
-    // inquirer
-    //     .prompt(
-    //         {
-    //             name: "deptToAdd",
-    //             type: "input",
-    //             message: "What is the name of the Department you want to add?"
-    //         }
-    //     )
-    //     .then(answers => {
-    //         connection.query('INSERT INTO department (name) VALUES (?)', [answers.deptToAdd] function (err, res) {
-    //             if (err) throw err;
-    //             console.log("");
-    //             runTracker();
-    //         });
-    //     });
+    inquirer
+        .prompt(
+            {
+                name: "deptToAdd",
+                type: "input",
+                message: "What is the name of the Department you want to add?"
+            }
+        )
+        .then(answers => {
+            connection.query('INSERT INTO department (name) VALUES (?)', [answers.deptToAdd], function (err, res) {
+                if (err) throw err;
+                console.log("");
+                runTracker();
+            });
+        });
 
 };
 
