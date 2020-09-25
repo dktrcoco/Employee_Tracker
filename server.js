@@ -18,8 +18,12 @@ var connection = mysql.createConnection({
 });
 
 connection.connect(function (err) {
-    if (err) throw err;
-    runTracker();
+    try {
+        if (err) throw err;
+        runTracker();
+    } catch (error) {
+        console.log(error);
+    };
 });
 
 function runTracker() {
@@ -194,64 +198,67 @@ function viewAllEmployeesByRole() {
 
 //allows for the addition of an employee to the employee table from the employeeTracker_DB
 function addEmployee() {
-    var manager = 'SELECT * FROM employee';
-    var role = 'SELECT * FROM role';
+    try {
+        var manager = 'SELECT * FROM employee';
+        var role = 'SELECT * FROM role';
 
-    connection.query(manager, function (err, res) {
-        if (err) throw err;
-        const managerChoices = res.map(({
-            id, first_name, last_name
-        }) => ({
-            name: `${first_name} ${last_name}`,
-            value: id
-        }));
-
-        connection.query(role, function (err, res) {
+        connection.query(manager, function (err, res) {
             if (err) throw err;
-            const roleChoices = res.map(({
-                id, title
+            const managerChoices = res.map(({
+                id, first_name, last_name
             }) => ({
-                name: title,
+                name: `${first_name} ${last_name}`,
                 value: id
             }));
 
-            inquirer
-                .prompt([{
-                    name: "firstName",
-                    type: "input",
-                    message: "What is the Employee's first name?"
-                },
-                {
-                    name: "lastName",
-                    type: "input",
-                    message: "What is the Employee's last name?"
-                },
-                {
-                    name: "employeeManager",
-                    type: "list",
-                    message: "Who is the Employee's Manager?",
-                    choices: managerChoices,
-                    pageSize: managerChoices.length
-                },
-                {
-                    name: "employeeRole",
-                    type: "list",
-                    message: "What is the Employee's role?",
-                    choices: roleChoices,
-                    pageSize: roleChoices.length
-                }
-                ])
-                .then(answers => {
-                    //syntax for adding row to table in db
-                    connection.query("INSERT INTO employee (first_name, last_name, manager_id, role_id) VALUES (?, ?, ?, ?)", [answers.firstName, answers.lastName, answers.employeeManager, answers.employeeRole], function (err, res) {
-                        console.log(err);
-                        if (err) throw err;
-                        console.log("");
+            connection.query(role, function (err, res) {
+                if (err) throw err;
+                const roleChoices = res.map(({
+                    id, title
+                }) => ({
+                    name: title,
+                    value: id
+                }));
+                inquirer
+                    .prompt([{
+                        name: "firstName",
+                        type: "input",
+                        message: "What is the Employee's first name?"
+                    },
+                    {
+                        name: "lastName",
+                        type: "input",
+                        message: "What is the Employee's last name?"
+                    },
+                    {
+                        name: "employeeManager",
+                        type: "list",
+                        message: "Who is the Employee's Manager?",
+                        choices: managerChoices,
+                        pageSize: managerChoices.length
+                    },
+                    {
+                        name: "employeeRole",
+                        type: "list",
+                        message: "What is the Employee's role?",
+                        choices: roleChoices,
+                        pageSize: roleChoices.length,
+                        askAnswered: true
+                    }
+                    ])
+                    .then(answers => {
+                        //syntax for adding row to table in db
+                        connection.query("INSERT INTO employee (first_name, last_name, manager_id, role_id) VALUES (?, ?, ?, ?)", [answers.firstName, answers.lastName, answers.employeeManager, answers.employeeRole], function (err, res) {
+                            console.log(err);
+                            if (err) throw err;
+                            console.log("");
+                            runTracker();
+                        });
                     });
-                });
+            });
+
         });
-        runTracker();
-    });
+    } catch (error) { console.log(error) };
 };
 
 //allows for the addition of a department to the department table from the employeeTracker_DB
@@ -269,11 +276,9 @@ function addDepartment() {
             connection.query('INSERT INTO department (name) VALUES (?)', [answers.deptToAdd], function (err, res) {
                 if (err) throw err;
                 console.log("");
-
+                runTracker();
             });
-            runTracker();
         });
-
 };
 
 //allows for the addition of a role to the role table from the employeeTracker_DB
@@ -312,55 +317,62 @@ function addRole() {
                 connection.query('INSERT INTO role (title, salary, department_id) VALUES(?, ?, ?)', [answers.roleToAdd, answers.roleSalary, answers.roleDepartment], function (err, res) {
                     if (err) throw err;
                     console.log("");
+                    runTracker();
                 });
-                runTracker();
             });
     });
 };
 
 //allows for the selection of a department and tallies the total of all department member's salary
 function salaryOfDepartment() {
-    //need to isolate
-    // var dept = 'SELECT * FROM department';
-    // connection.query(dept, function (err, res) {
-    //     if (err) throw err;
-    //     const departmentChoices = res.map(({
-    //         id, name
-    //     }) => ({
-    //         name: name,
-    //         value: id
-    //     }))
-    //     inquirer
-    //         .prompt(
-    //             {
-    //                 name: "deptFilter",
-    //                 type: "list",
-    //                 message: "Which Department's Total Salary do you want to see?",
-    //                 choices: departmentChoices,
-    //                 pageSize: departmentChoices.length
-    //             }
-    //         )
-    //         .then(answers => {
 
-    //             var sql = 'SELECT department.name AS department, role.salary FROM employee e LEFT JOIN ' +
-    //             'employee m ON e.manager_id = m.id INNER JOIN role ON e.role_id = role.id INNER JOIN ' + 
-    //             'department ON role.department_id = department.id ' + answers.deptFilter;
-    //             // var sql = 'SELECT e.first_name, e.last_name, r.title, r.salary, d.name AS "department name",' +
-    //             //     'CONCAT(em.first_name, " ", em.last_name) AS Manager ' +
-    //             //     'FROM employee e INNER JOIN role r ON e.role_id = r.id ' +
-    //             //     'LEFT JOIN employee em ON e.manager_id = em.id ' +
-    //             //     'INNER JOIN department d ON r.department_id = d.id ' +
-    //             //     'WHERE d.id = ' + answers.deptFilter;
-    //             connection.query(sql, function (err, res) {
-    //                 if (err) throw err;
-    //                 console.log("");
-    //                 console.table(res);
-    //             });
-    //             runTracker();
-    //         });
-    // });
+    var dept = 'SELECT * FROM department';
+    connection.query(dept, function (err, res) {
+        if (err) throw err;
+        const departmentChoices = res.map(({
+            id, name
+        }) => ({
+            name: name,
+            value: id
+        }))
+        inquirer
+            .prompt(
+                {
+                    name: "deptFilter",
+                    type: "list",
+                    message: "Which Department's Total Salary do you want to see?",
+                    choices: departmentChoices,
+                    pageSize: departmentChoices.length
+                }
+            )
+            .then(answers => {
 
-    runTracker(); //this is here so you go back to the main menu since the function is not currently functional
+                var sql = 'SELECT department.name AS department, role.salary FROM employee e LEFT JOIN ' +
+                    'employee m ON e.manager_id = m.id INNER JOIN role ON e.role_id = role.id INNER JOIN ' +
+                    'department ON role.department_id = department.id WHERE department.id = ?'
+
+                connection.query(sql, [answers.deptFilter], function (err, res) {
+                    try {
+                        if (err) throw err;
+                        console.log("");
+                        console.table(res);
+                        let sum = 0;
+                        for (let i = 0; i < res.length; i++) {
+                            sum += res[i].salary;
+                        }
+                        if (res.length > 0) {
+                            console.log("The Total Salary for the " + res[0].department + " department: " + sum);
+                        }
+                        else {
+                            console.log("There are no employees in this department.")
+                        }
+                        runTracker();
+                    } catch (errur) {
+                        console.log(errur);
+                    }
+                });
+            });
+    });
 };
 
 //allows for the removal of an employee from the employee table from the employeeTracker_DB
@@ -389,9 +401,8 @@ function removeEmployee() {
                 connection.query("DELETE FROM employee WHERE id = (?)", [answers.empToRemove], function (err, res) {
                     console.log(err);
                     if (err) throw err;
-
+                    runTracker();
                 });
-                runTracker();
             });
     });
 };
@@ -422,9 +433,8 @@ function removeDepartment() {
                 connection.query("DELETE FROM department WHERE id = (?)", [answers.deptToRemove], function (err, res) {
                     console.log(err);
                     if (err) throw err;
-
+                    runTracker();
                 });
-                runTracker();
             });
     });
 };
@@ -454,8 +464,8 @@ function removeRole() {
                 connection.query('DELETE FROM role WHERE id = (?)', [answers.roleToRemove], function (err, res) {
                     if (err) throw err;
                     console.log("");
+                    runTracker();
                 });
-                runTracker();
             });
     });
 };
@@ -504,8 +514,8 @@ function updateEmployeeRole() {
                     connection.query("UPDATE employee SET role_id = (?) WHERE id = (?)", [answers.setRole, answers.empToUpdateRole], function (err, result) {
                         if (err) throw err;
                         console.log("");
+                        runTracker();
                     });
-                    runTracker();
                 });
         });
     });
@@ -544,8 +554,8 @@ function updateEmployeeManager() {
                 connection.query("UPDATE employee SET manager_id = (?) WHERE id = (?)", [answers.setManager, answers.managerUpdate], function (err, result) {
                     if (err) throw err;
                     console.log("");
+                    runTracker();
                 });
-                runTracker();
             });
     });
 };
