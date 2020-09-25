@@ -466,33 +466,39 @@ function updateEmployeeRole() {
 };
 
 function updateEmployeeManager() {
+    var manager = 'SELECT * FROM employee';
+    connection.query(manager, function (err, res) {
+        if (err) throw err;
+        const managerChoices = res.map(({
+            id, first_name, last_name
+        }) => ({
+            name: `${first_name} ${last_name}`,
+            value: id
+        }))
     inquirer
         .prompt([
             {
                 name: "managerUpdate",
                 type: "list",
-                message: "Which Employee's Manager do you want to update?"
+                message: "Which Employee's Manager do you want to update?",
+                choices: managerChoices
             },
             {
                 name: "setManager",
                 type: "list",
-                message: "Which Employee do you want to set as Manager for the selected Employee?"
+                message: "Which Employee do you want to set as Manager for the selected Employee?",
+                choices: managerChoices
             }
         ])
         .then(answers => {
             //syntax for updating manager column in db for specific employee
-            connection.query("UPDATE plans SET manager = ? WHERE id = ?", [req.body.plan, req.params.id], function (err, result) {
-                if (err) {
-                    // If an error occurred, send a generic server failure
-                    return res.status(500).end();
-                }
-                else if (result.changedRows === 0) {
-                    // If no rows were changed, then the ID must not exist, so 404
-                    console.log(404);
-                }
+            connection.query("UPDATE employee SET manager_id = (?) WHERE id = (?)", [answers.setManager, answers.managerUpdate], function (err, result) {
+                if (err) throw err;
+                console.log("");
             });
             runTracker();
-        })
+        });
+    });
 };
 
 function taskComplete() {
