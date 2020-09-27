@@ -2,6 +2,8 @@
 
 This will have a CLI that takes user input, followed by displaying the requested data from a database, manipulating the data from a database, or inserting the inputted data to the database
 
+Video of App in Action: https://youtu.be/dAWDrAyr6DU
+
 Table of Contents
 * [User Story](#story)
 * [Images](#images)
@@ -80,14 +82,20 @@ THEN the connection is terminated and I go back to the command-line prompt
 
 ## Images
 
-Fig. 1: 
-![](/Develop/NodeChoice.PNG)
+Fig. 1: Code for the Main Menu Functionality
+![Primary Main Menu Function](/Primary.PNG)
+
+Fig. 2: Example of the Use of JOINS to Call Specific Data from database
+![JOINS Example](/ViewAll.PNG)
+
+Fig. 3: Example of Two Nested "connection.query"'s
+![Nested Connection Queries Example](/NestedConnectionQueries.PNG)
 
 ## Install
 
 You need to install inquirer and mysql in order to allow prompts and interaction with the database, respectively.
 
-## Contributions
+## Contribution
 
 If you have any contribution ideas or thoughts, please contact me via email (chris.kabana@gmail.com)
 
